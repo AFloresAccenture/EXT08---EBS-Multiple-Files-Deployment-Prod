@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#####################################################################################################################
+#																													
+#	Script Name: XXNBTYINT02.prog																			
+#	Author's Name: Erwin Ramos																						
+#	Date written: 06-Oct-2014																						
+#	RICEFW Object: INT02																							
+#	Description: Unix script for INT02 Batch Interface.																
+#	Program Style: 																									
+#																													
+#	Maintenance History:																							
+#																													
+#	Date			Issue#		Name			Remarks																
+#	-----------		------		-----------		------------------------------------------------					
+#	06-Oct-2014				Erwin Ramos		Initial Development													
+#   	20-Apr-2015     	Defect 155  	Daniel Rodil		Update /interface/j_nbty/$server to $server only to accomodate i_nbty for production																											
+#	17-Jun-2015		EXT08		Albert John Flores	Added parameter incoming and archive location																													
+#####################################################################################################################
+
+## Set variable
+v_date=`date "+%Y-%m-%d_%H:%M"`;
+p_incoming="$5"; #incoming flat file location
+p_archived="$6"; #archive folder
+#server="DNBTYI";
+
+#fileArch=/interface/j_nbty/$server/archive; ##Location of archive files
+#incoming=/interface/j_nbty/$server/incoming;
+
+fileArch=$p_archived; ##Location of archived files
+incoming=$p_incoming; ##location of flat files
+
+
+cd $incoming
+rm XXNBTY_BATCH.dat
+
+##Converting the flat file from dos to unix format.
+
+dos2unix XXNBTY_BATCH_HEADER*
+
+cat XXNBTY_BATCH_HEADER* > XXNBTY_BATCH.dat
+
+##ARCHIVED original and enriched flat file
+
+chmod 777 XXNBTY_BATCH.dat
+cat XXNBTY_BATCH.dat > XXNBTY_BATCH_BCK_$v_date.dat
+
+
+mv XXNBTY_BATCH_HEADER* $fileArch
+mv XXNBTY_BATCH_BCK_*  $fileArch
+
+
+exit 0

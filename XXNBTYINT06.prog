@@ -1,0 +1,49 @@
+#!/bin/bash
+
+###########################################################################################################################
+##Script Name: XXNBTYINT06.prog
+##Created By   : Albert John Flores
+##Date Created : 18-Nov-2014
+##Descriptions : UNIX script for EXT06 - Customer Interface to archives original flat file
+##               
+##	Maintenance History:																							
+##																													
+##	Date			Issue#		Name						Remarks																
+##	-----------		------		--------------------		------------------------------------------------					
+##	18-Nov-2014				Albert John Flores			Initial Development		
+##  	20-Apr-2015     	Defect 155  	Daniel Rodil				Update /interface/j_nbty/$Instance_Name to $Instance_Name only to accomodate i_nbty for production																											
+##	17-Jun-2015		EXT08		Albert John Flores			Added Parameter incoming and archive location
+###########################################################################################################################
+
+v_suffx=`date "+%Y%m%d_%H%M"`; 
+p_incoming="$5";
+p_archived="$6";
+#Instance_Name="DNBTYI";
+
+#fileArch=/interface/j_nbty/$Instance_Name/archive; ##Location of archive files
+#incoming=/interface/j_nbty/$Instance_Name/incoming;
+fileArch=$p_archived; ##Location of archive files  #6-17-2015 Aflores
+incoming=$p_incoming; #6-17-2015 Aflores
+
+
+#cd /interface/j_nbty/$Instance_Name/incoming
+cd $incoming
+rm Customer.dat
+
+dos2unix XXNBTY_CUSTOMER*
+
+> $incoming/Customer.dat
+
+cat XXNBTY_CUSTOMER* > $incoming/Customer.dat
+
+chmod 777 Customer.dat
+
+#Creating eriched file backup. 
+cat Customer.dat > Customer_backup_$v_suffx.dat
+
+#Archive original and enriched flat file.
+#mv /interface/j_nbty/$Instance_Name/incoming/XXNBTY_CUSTOMER* /interface/j_nbty/$Instance_Name/incoming/LF04CUSTINTERFACE/archive/original/ 
+mv XXNBTY_CUSTOMER* $fileArch
+mv Customer_backup_* $fileArch
+
+exit 0

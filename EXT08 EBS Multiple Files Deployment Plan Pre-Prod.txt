@@ -1,0 +1,58 @@
+Command to deploy the object of EBS Multiple files. 
+
+
+1.Open Unix. 
+2.Move the XXNBTY_EBS_EXT08_MFFILE_CHK_PKG.pks and XXNBTY_EBS_EXT08_MFFILE_CHK_PKG.pkb to /pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/sql using WINSCP and execute the command below in the UNIX.
+
+
+/pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/sql 
+
+sqlplus -s USERNAME/PASSWORD
+
+@/pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/sql/XXNBTY_EBS_EXT08_MFFILE_CHK_PKG.pks
+
+@/pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/sql/XXNBTY_EBS_EXT08_MFFILE_CHK_PKG.pkb
+
+
+3.Move the XXNBTY_EXT08EBSMF_CP_a.ldt, XXNBTY_EXT08EBSMF_CP_b.ldt, XXNBTY_EXT08EBSMF_RS.ldt, XXNBTY_EXT08EBSMF_RL.ldt, XXNBTY_EXT08EBSMF_RG.ldt to /pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/import using WINSCP and execute the command below in the UNIX.
+
+NOTE: Please make sure to update the password.
+
+cd /pnbtyi/applmgr/1200/xxnbty/12.0.0/admin/import
+
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcpprog.lct XXNBTY_EXT08EBSMF_CP_a.ldt CUSTOM_MODE=FORCE
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcpprog.lct XXNBTY_EXT08EBSMF_CP_b.ldt CUSTOM_MODE=FORCE
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcpprog.lct XXNBTY_EXT08_CP_b.ldt CUSTOM_MODE=FORCE
+
+
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcprset.lct XXNBTY_EXT08EBSMF_RS.ldt CUSTOM_MODE=FORCE
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcprset.lct XXNBTY_EXT08EBSMF_RL.ldt CUSTOM_MODE=FORCE
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcpreqg.lct XXNBTY_EXT08EBSMF_RG.ldt CUSTOM_MODE=FORCE
+FNDLOAD apps/PASSWORD 0 Y UPLOAD $FND_TOP/patch/115/import/afcpreqg.lct XXNBTY_EXT08EBSMF_CP_RG.ldt CUSTOM_MODE=FORCE
+
+
+4. Move the XXNBTYEXT08_EBSMF.prog, XXNBTYCONV03.prog, XXNBTYINT02.prog, XXNBTYINT06.prog, XXNBTYLF08.prog , XXNBTYEXT08.prog in the /pnbtyi/applmgr/1200/xxnbty/12.0.0/bin using WINSCP and execute the command below in the UNIX. 
+
+cd /pnbtyi/applmgr/1200/xxnbty/12.0.0/bin
+
+dos2unix XXNBTYEXT08_EBSMF.prog
+dos2unix XXNBTYCONV03.prog
+dos2unix XXNBTYINT02.prog
+dos2unix XXNBTYINT06.prog
+dos2unix XXNBTYLF08.prog
+dos2unix XXNBTYEXT08.prog
+
+
+chmod 777 XXNBTYEXT08_EBSMF.prog
+chmod 777 XXNBTYCONV03.prog
+chmod 777 XXNBTYINT02.prog
+chmod 777 XXNBTYINT06.prog
+chmod 777 XXNBTYLF08.prog
+chmod 777 XXNBTYEXT08.prog
+
+
+ln -s /pnbtyi/applmgr/1200/fnd/12.0.0/bin/fndcpesr XXNBTYEXT08_EBSMF
+
+ln -s /pnbtyi/applmgr/1200/fnd/12.0.0/bin/fndcpesr XXNBTYEXT08
+
+

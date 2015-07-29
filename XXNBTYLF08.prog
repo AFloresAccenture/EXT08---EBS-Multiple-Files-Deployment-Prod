@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#####################################################################################################################
+#																													
+#	Script Name: XXNBTY_BOM_TRANSFRM.																				
+#	Author's Name: Erwin Ramos																						
+#	Date written: 25-Nov-2014																						
+#	RICEFW Object: LF08																								
+#	Description: Unix script for LF08-Bill of Materials.															
+#	Program Style: 																									
+#																													
+#	Maintenance History:																							
+#																													
+#	Date			Issue#		Name			Remarks																
+#	-----------		------		-----------		------------------------------------------------					
+#	25-Nov-2014				Erwin Ramos		Initial Development													
+#   	20-Apr-2015     	Defect 155  	Daniel Rodil		Update /interface/j_nbty/$p_server to $p_server only to accomodate i_nbty for production																											
+#	17-Jun-2015		EXT08		Albert Flores		added parameter incoming and archive location																										
+#																													
+#####################################################################################################################
+
+## Set variable
+##Parameter from concurrent program. 
+
+
+v_date=`date "+%Y-%m-%d_%H:%M"`;
+v_arc_date=`date "+%Y-%m-%d"`;
+p_incoming="$5"; #June 17 2015 incoming parameter
+p_archive="$6";	#June 17 2015 archive parameter
+
+##server="DNBTYI";
+BOM_HEADER="XXNBTY_BOM_HEADER_";
+BOM_COMP="XXNBTY_BOM_COMP_";
+#fileArch=/interface/j_nbty/$p_server/archive; ##Location of archive files
+#incoming=/interface/j_nbty/$p_server/incoming;
+
+fileArch=$p_archive; ##Location of archive files
+incoming=$p_incoming;
+
+## Converting the flat file from dos to unix format.
+cd $incoming
+dos2unix $BOM_HEADER*
+dos2unix $BOM_COMP*
+
+## Transfering of flat files into header and component.
+cat $BOM_HEADER* > XXNBTY_BOM.dat
+cat $BOM_COMP* > XXNBTY_BOM_COMPONENT.dat
+
+chmod 777 XXNBTY_BOM.dat
+chmod 777 XXNBTY_BOM_COMPONENT.dat
+
+cat XXNBTY_BOM.dat > XXNBTY_BOM_$v_date.dat
+cat XXNBTY_BOM_COMPONENT.dat > XXNBTY_BOM_COMPONENT_$v_date.dat
+
+## Archived original and enriched flat file
+
+mv $BOM_HEADER* $fileArch
+mv $BOM_COMP*  $fileArch
+
+mv XXNBTY_BOM_$v_arc_date* $fileArch
+mv XXNBTY_BOM_COMPONENT_$v_arc_date*  $fileArch
+
+exit 0

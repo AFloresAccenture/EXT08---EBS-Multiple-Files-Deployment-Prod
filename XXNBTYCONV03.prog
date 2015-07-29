@@ -1,0 +1,50 @@
+###########################################################################################################################
+##Created By   : Ronald R. Villavieja
+##Date Created : 11/18/2014
+##Descriptions : Unix file that consolidates multiple header and detail 
+##               formula flat files into a consolidated file
+##               Script also archives original header and detail flat files to an archive folder
+##               Script also archives the consolidated flat file to an archive folder
+##	Maintenance History:																							
+##																													
+##	Date			Issue#		Name						Remarks																
+##	-----------		------		--------------------		------------------------------------------------					
+##	25-Nov-2014				 	Ronald R. Villavieja		Initial Development		
+##	14-Jan-2015					Ronald R. Villavieja		Replaced hard coded instance name with variable to hold passed instance name
+##  20-Apr-2015     Defect 155  Daniel Rodil				Update /interface/j_nbty/$VInstName to $VInstName only to accomodate i_nbty for production
+##	17-Jun-2015		EXT08		Erwin Ramos					Deleted the incoming word in the incoming parameter. 	
+###########################################################################################################################
+
+#!/bin/bash
+v_suffx=`date "+%Y%m%d_%H%M"`;
+p_incoming=$5 #former VInstName
+p_arch=$6 #archive
+#VInstName="DNBTYI";
+
+#fileArch=/interface/j_nbty/$VInstName/archive; ##Location of archive files
+#incoming=/interface/j_nbty/$VInstName/incoming;
+
+fileArch=$p_arch; ##Location of archive files
+incoming=$p_incoming;
+
+##Converting flat file from dos to unix. 
+cd $incoming
+dos2unix XXNBTY_FORMULA*
+
+> $incoming/XXNBTY_FORMULA.dat
+
+grep "" /dev/null XXNBTY_FORMULA* > $incoming/XXNBTY_FORMULA.dat
+
+chmod 777 XXNBTY_FORMULA.dat
+
+##Archiving of Original and enriched flat file. 
+
+cp XXNBTY_FORMULA.dat XXNBTY_FORMULA_$v_suffx.dat
+
+mv $incoming/XXNBTY_FORMULA_* $fileArch
+
+
+exit 0
+
+
+

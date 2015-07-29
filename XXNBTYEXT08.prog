@@ -1,0 +1,125 @@
+#!/bin/bash
+
+#####################################################################################################################
+#																													
+#	Script Name: XXNBTYEXT08																				
+#	Author's Name: Erwin Ramos																						
+#	Date written: 30-Apr-2015																						
+#	RICEFW Object: EXT08																								
+#	Description: Unix script for EXT08 - Flat file validation.																
+#	Program Style: 																									
+#																													
+#	Maintenance History:																							
+#																													
+#	Date			Issue#		Name			Remarks																
+#	-----------		------		-----------		------------------------------------------------					
+#	30-Apr-2015				 	Erwin Ramos		Initial Development													
+#																													
+#																														
+#####################################################################################################################
+
+
+## parameter
+P_RETRIES="$5"; #Parameter for Number of Interval
+P_INTERVAL="$6"; #Parameter for number of minutes
+P_LOCATION="$7"; #Parameter of flat file location
+
+#echo "P_LOCATION..." $P_LOCATION
+#echo "P_RETRIES..." $P_RETRIES
+#echo "P_INTERVAL..." $P_INTERVAL
+
+P_LOCATION=$(eval echo ${P_LOCATION})
+
+FILENAME1="XXNBTY_FORMULA_HEADER";
+FILENAME2="XXNBTY_FORMULA_DETAILS";
+FILENAME3="XXNBTY_BOM_HEADER";
+FILENAME4="XXNBTY_BOM_COMP";
+FILENAME5="XXNBTY_CUSTOMER";
+FILENAME6="XXNBTY_BATCH_HEADER";
+
+countfile1=`ls -l $P_LOCATION/$FILENAME1* | wc -l`;
+countfile2=`ls -l $P_LOCATION/$FILENAME2* | wc -l`;
+countfile3=`ls -l $P_LOCATION/$FILENAME3* | wc -l`;
+countfile4=`ls -l $P_LOCATION/$FILENAME4* | wc -l`;
+countfile5=`ls -l $P_LOCATION/$FILENAME5* | wc -l`;
+countfile6=`ls -l $P_LOCATION/$FILENAME6* | wc -l`;
+
+## Pre-Validation if the file is multiple.  #Apr-11-2015
+
+checkFile1=`ls -lrt $P_LOCATION/$FILENAME1*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`; 
+checkFile2=`ls -lrt $P_LOCATION/$FILENAME2*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`;
+checkFile3=`ls -lrt $P_LOCATION/$FILENAME3*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`;
+checkFile4=`ls -lrt $P_LOCATION/$FILENAME4*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`;
+checkFile5=`ls -lrt $P_LOCATION/$FILENAME5*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`;
+checkFile6=`ls -lrt $P_LOCATION/$FILENAME6*.DAT | awk '{print $9}' | (tail -n1 && head -n1)`;
+
+## Pre-Validation if the file is existing.  #Apr-11-2015
+
+v_counter=0
+v_exist="NO";
+c_min="m"; 
+
+while [ $v_counter -le $P_RETRIES ] 
+do
+	if [ -f "$checkFile1" ] && [ -f "$checkFile2" ] && [ -f "$checkFile3" ] && [ -f "$checkFile4" ] && [ -f "$checkFile5" ] && [ -f "$checkFile6" ]
+	then 
+		#echo "File exist. Exiting..."
+		v_exist="YES"
+		break
+	else 
+		#echo "File does not exist. Sleeping in $p_minutes minutes."
+		v_counter=`expr $v_counter + 1`
+		
+		if 
+			[ $v_counter -gt $P_RETRIES ]
+		then
+			break
+		fi
+		
+		sleep $P_INTERVAL$c_min	
+
+	fi
+done
+
+if [ $v_exist == "YES" ] 
+then
+	echo "All EBS VCI Supply Legacy files are present."
+	exit 0
+else
+	echo " "
+	echo "+---------------------------------------------------------------------------+"
+	echo " "
+	echo "The following EBS VCI Supply Legacy Files are missing at location " $P_LOCATION
+	echo " "
+	
+	if [ ! -f "$checkFile1" ] 
+	then
+		echo "$FILENAME1"*.DAT
+	fi
+	if [ ! -f "$checkFile2" ] 
+	then
+		echo "$FILENAME2"*.DAT
+	fi
+	if [ ! -f "$checkFile3" ] 
+	then
+		echo "$FILENAME3"*.DAT
+	fi
+	if [ ! -f "$checkFile4" ] 
+	then
+		echo "$FILENAME4"*.DAT
+	fi
+	if [ ! -f "$checkFile5" ] 
+	then
+		echo "$FILENAME5"*.DAT
+	fi
+	if [ ! -f "$checkFile6" ]
+	then
+		echo "$FILENAME6"*.DAT
+	fi
+
+	echo " "
+	echo "+---------------------------------------------------------------------------+"
+	echo " "
+
+	exit 2
+fi

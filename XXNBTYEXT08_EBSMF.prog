@@ -1,0 +1,266 @@
+#!/bin/bash
+
+####################################################################################################################
+#																													
+#	Script Name: XXNBTYEXT08_EBSMF.prog																			
+#	Author's Name: Erwin Ramos																				
+#	Date written: 01-Jun-2015																							
+#	RICEFW Object: EBS Multiple files checking																								
+#	Description: This program will check the multiple legacy flat files in the incoming directory. 
+#				If there are multiple files in the incoming directory the newest files will be moved to temporary directory and the earliest file will be process first. 															
+#	Program Style: 																									
+#																													
+#	Maintenance History:																							
+#																													
+#	Date			Issue#		Name			Remarks																
+#	-----------		------		-----------		------------------------------------------------					
+#	01-Jun-2015				 	Erwin Ramos		Initial Development	
+#	14-Jul-2015					Erwin Ramos		Update the responsibility name in the CONCSUB command. 	
+#	 
+#												
+#												 									
+#	
+#																														
+####################################################################################################################
+
+tempDIR="/tmp/flatfile_tmp";
+#archiveDIR="$XXNBTY_TOP/data/in/arch"; ## This is the archive directory
+#incomingDIR="/home/nbtydata/incoming";	## This is the current incoming directory
+#P_INCOMING_DIR="/interface/j_nbty/SNBT1I/incoming";
+
+P_INCOMING_DIR="$5";
+P_ARCHIVE_DIR="$6";	
+P_OBJECT_NAME="$7";
+P_USER="$8";
+APPS_LOGIN="$FCP_LOGIN";	
+v_date=`date "+%d-%b-%Y %H:%M:%S"`;
+UserName=$P_USER
+#responsibility="'NBTY VCI BOM Maintenance User'";
+
+AppsName="XXNBTY";
+var1Formula="FORMULA";
+var1Bom="BOM";
+var1Customer="CUSTOMER_INTERFACE";
+var1Batch="BATCH";
+varAll="ALL_EBS_RICEFW";
+
+FILENAME1="XXNBTY_FORMULA_HEADER";
+FILENAME2="XXNBTY_FORMULA_DETAILS";
+FILENAME3="XXNBTY_BOM_HEADER";
+FILENAME4="XXNBTY_BOM_COMP_";
+FILENAME5="XXNBTY_CUSTOMER";
+FILENAME6="XXNBTY_BATCH_HEADER";
+
+parameter="$P_INCOMING_DIR $P_ARCHIVE_DIR $P_OBJECT_NAME";
+#echo $parameter
+
+##Create temp directory
+cd /tmp
+mkdir flatfile_tmp
+chmod 777 flatfile_tmp
+pwd
+
+cd $P_INCOMING_DIR
+pwd
+
+############################MULTIPLE FILES VALIDATION FOR FORMULA############################################################	
+echo "FORMULA flat file checking started..."				
+formula1="$P_INCOMING_DIR/$FILENAME1*";
+formula2="$P_INCOMING_DIR/$FILENAME2*";
+
+if [ "$P_OBJECT_NAME" == "$var1Formula" ] || [ "$P_OBJECT_NAME" == "$varAll" ]
+
+then
+		echo "The incoming directory is: " $P_INCOMING_DIR
+		echo ""
+		movefile1="mv $formula1 $tempDIR";	#move the all files in the archive directory 
+		movefile2="mv $formula2 $tempDIR";	#move the all files in the archive directory 
+		#echo "The command for move1 " $movefile1
+		#echo "The command for move2 " $movefile2
+		$movefile1
+		$movefile2
+
+		echo ""
+fi
+
+	cd $tempDIR
+	check_TMP_file1=`ls -l $FILENAME1* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+	
+	echo "The count of files in the temporary is " $check_TMP_file1
+	
+		while [ "$check_TMP_file1" -ge 1 ]
+		do 
+			checkLastFile1=`ls -lrt $FILENAME1* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+			checkLastFile2=`ls -lrt $FILENAME2* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+					
+			echo "The earliest files are "$checkLastFile1 "and" $checkLastFile2
+			
+			if [ "$check_TMP_file1" -ge 1 ]
+			then 
+			#	cd $tempDIR
+				
+				mv $checkLastFile1 $P_INCOMING_DIR
+				mv $checkLastFile2 $P_INCOMING_DIR
+				
+				echo "CONCSUB will execute the Concurrent programs of FORMULA API"		
+				CONCSUB $APPS_LOGIN BOM 'NBTY VCI BOM Maintenance User' $UserName WAIT=30 CONCURRENT $AppsName 'XXNBTY_EBS_INT_PROG_LOAD' IMPLICIT=NO $P_INCOMING_DIR $P_ARCHIVE_DIR FORMULA
+
+				check_TMP_file1=`ls -l $FILENAME1* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+				
+			else [ "$check_TMP_file1" -eq 0 ]
+			
+				echo "done with formula execution"
+				break
+			fi
+		done
+echo "BOM flat file checking ended..."				
+
+############################MULTIPLE FILES VALIDATION FOR BOM############################################################			
+echo "BOM flat file checking started..."				
+bom1="$P_INCOMING_DIR/$FILENAME3*";
+bom2="$P_INCOMING_DIR/$FILENAME4*";
+		
+if [ "$P_OBJECT_NAME" == "$var1Bom" ] || [ "$P_OBJECT_NAME" == "$varAll" ]
+
+then
+		echo "The incoming directory is: " $P_INCOMING_DIR
+		echo ""
+		movefile3="mv $bom1 $tempDIR";	#move the all files in the archive directory 
+		movefile4="mv $bom2 $tempDIR";	#move the all files in the archive directory 
+		#echo "The command for move1 " $movefile3
+		#echo "The command for move2 " $movefile4
+		
+		$movefile3
+		$movefile4
+
+		echo ""
+fi
+
+	cd $tempDIR
+	check_TMP_file3=`ls -l $FILENAME3* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+	check_TMP_file4=`ls -l $FILENAME4* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+	
+	echo "The count of files in the temporary is " $check_TMP_file3
+	
+		while [ "$check_TMP_file3" -ge 1 ]
+		do 
+			checkLastFile1=`ls -lrt $FILENAME3* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+			checkLastFile2=`ls -lrt $FILENAME4* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+					
+			echo "The earliest files are "$checkLastFile1 "and" $checkLastFile2
+			
+			if [ "$check_TMP_file3" -ge 1 ]
+			then 
+			#	cd $tempDIR
+				
+				mv $checkLastFile1 $P_INCOMING_DIR
+				mv $checkLastFile2 $P_INCOMING_DIR
+				
+				echo "CONCSUB will execute the Concurrent programs of BOM API"		
+				CONCSUB $APPS_LOGIN BOM 'NBTY VCI BOM Maintenance User' $UserName WAIT=30 CONCURRENT $AppsName 'XXNBTY_EBS_INT_PROG_LOAD' IMPLICIT=NO $P_INCOMING_DIR $P_ARCHIVE_DIR BOM
+
+				check_TMP_file3=`ls -l $FILENAME3* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+				check_TMP_file4=`ls -l $FILENAME4* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+				
+			else [ "$check_TMP_file3" -eq 0 ]
+			
+				echo "done with BOM execution"
+				break
+			fi
+		done		
+echo "BOM flat file checking ended..."				
+
+############################MULTIPLE FILES VALIDATION FOR CUSTOMER############################################################	
+echo "Customer flat file checking started..."		
+customer1="$P_INCOMING_DIR/$FILENAME5*";
+
+		
+if [ "$P_OBJECT_NAME" == "$var1Customer" ] || [ "$P_OBJECT_NAME" == "$varAll" ]
+
+then
+		echo "The incoming directory is: " $P_INCOMING_DIR
+		echo ""
+		moveCustomerfile5="mv $customer1 $tempDIR";	#move the all files in the archive directory 
+		#echo "The command for move1 " $moveCustomerfile5
+		$moveCustomerfile5
+		echo ""
+fi
+
+	cd $tempDIR
+	check_TMP_custfile3=`ls -l $FILENAME5* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+	
+	echo "The count of files in the temporary is " $check_TMP_custfile3
+	
+		while [ "$check_TMP_custfile3" -ge 1 ]
+		do 
+			checkLastFile1=`ls -lrt $FILENAME5* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+					
+			echo "The earliest files is "$checkLastFile1 
+			
+			if [ "$check_TMP_custfile3" -ge 1 ]
+			then 
+				
+				mv $checkLastFile1 $P_INCOMING_DIR
+				
+				echo "CONCSUB will execute the Concurrent programs of CUSTOMER API"		
+				CONCSUB $APPS_LOGIN BOM 'NBTY VCI BOM Maintenance User' $UserName WAIT=30 CONCURRENT $AppsName 'XXNBTY_EBS_INT_PROG_LOAD' IMPLICIT=NO $P_INCOMING_DIR $P_ARCHIVE_DIR CUSTOMER
+		
+				check_TMP_custfile3=`ls -l $FILENAME5* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+				
+			else [ "$check_TMP_custfile3" -eq 0 ]
+			
+				echo "done with Customer execution"
+				break
+			fi
+		done		
+echo "CUSTOMER flat file checking ended..."				
+
+############################MULTIPLE FILES VALIDATION FOR BATCH############################################################	
+echo "BATCH flat file checking started..."		
+batch1="$P_INCOMING_DIR/$FILENAME6*";
+
+		
+if [ "$P_OBJECT_NAME" == "$var1Batch" ] || [ "$P_OBJECT_NAME" == "$varAll" ]
+
+then
+		echo "The incoming directory is: " $P_INCOMING_DIR
+		echo ""
+		moveBatchfile6="mv $batch1 $tempDIR";	#move the all files in the archive directory 
+		#echo "The command for move1 " $moveBatchfile6
+		$moveBatchfile6
+		echo ""
+fi
+
+	cd $tempDIR
+	check_TMP_batchfile3=`ls -l $FILENAME6* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+	
+	echo "The count of files in the temporary is " $check_TMP_batchfile3
+	
+		while [ "$check_TMP_batchfile3" -ge 1 ]
+		do 
+			checkLastFile1=`ls -lrt $FILENAME6* | awk '{print $9}' | (head -n1 && tail -n1)`;	#result of earliest file in the temp directory.
+					
+			echo "The earliest files is "$checkLastFile1 
+			
+			if [ "$check_TMP_batchfile3" -ge 1 ]
+			then 
+				
+				mv $checkLastFile1 $P_INCOMING_DIR
+				
+				echo "CONCSUB will execute the Concurrent programs of BATCH API"		
+				CONCSUB $APPS_LOGIN BOM 'NBTY VCI BOM Maintenance User' $UserName WAIT=30 CONCURRENT $AppsName 'XXNBTY_EBS_INT_PROG_LOAD' IMPLICIT=NO $P_INCOMING_DIR $P_ARCHIVE_DIR BATCH
+
+				check_TMP_batchfile3=`ls -l $FILENAME6* | awk '{print $9}' | wc -l`; #count of flat files in the temp directory.
+				
+			else [ "$check_TMP_batchfile3" -eq 0 ]
+			
+				echo "done with BATCH execution"
+				break
+			fi
+		done				
+echo "BATCH flat file checking ended..."				
+			
+####Deletion of temporary directory		
+rmdir /tmp/flatfile_tmp
+
+exit 0
